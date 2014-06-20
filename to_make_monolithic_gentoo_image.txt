@@ -1,0 +1,19 @@
+# First, copy gentoo.xfs to gentoo.img in windows, since can only extend files with ntfs.ko
+dd if=/dev/zero of=/run/initramfs/fspart/gentoo.img count=$((10485760 + 2048))
+losetup /dev/loop1 /run/initramfs/fspart/gentoo.img 
+parted /dev/loop1 # (replace this cmd with sfdisk) make partitions 16s,2047s; 2048s,-1s
+
+# check sizes, if you like
+#blockdev --getsize /dev/loop1p1
+#du -B1 /run/initramfs/fspart/g2ldr.mbr 
+#blockdev --getsize /dev/loop1p2
+#du -B1 /run/initramfs/fspart/gentoo.xfs | cut -f1  | xargs -i bash -c 'echo $(({}/512))'
+
+dd if=/run/initramfs/fspart/g2ldr.mbr bs=1 count=446 of=/dev/loop1
+dd if=/run/initramfs/fspart/g2ldr.mbr bs=1 of=/dev/loop1 skip=512 seek=512
+dd if=/run/initramfs/fspart/gentoo.xfs of=/dev/loop1p2 
+
+# TODO now, what to do with g2ldr itself? I need to be able to customize g2ldr.mbr, essentially.
+
+losetup -d /dev/loop1
+sync
